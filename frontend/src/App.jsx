@@ -188,6 +188,43 @@ function App() {
             )}
           </div>
 
+          <div className="card dependency-card">
+            <h2>Dependency graph</h2>
+
+            <div className="graph-info">
+              <span>
+                {result.dependency_graph.edges.length} connections
+              </span>
+
+              <span>
+                {result.dependency_graph.connected_files.length} connected
+                files
+              </span>
+            </div>
+
+            {result.dependency_graph.edges.length ? (
+              <div className="dependency-list">
+                {result.dependency_graph.edges.slice(0, 30).map((edge, index) => (
+                  <div className="dependency-edge" key={index}>
+                    <code>{edge.from}</code>
+                    <span>→</span>
+                    <code>{edge.to}</code>
+                  </div>
+                ))}
+
+                {result.dependency_graph.edges.length > 30 && (
+                  <p className="graph-more">
+                    Showing first 30 connections.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="empty-graph">
+                No internal dependencies detected.
+              </div>
+            )}
+          </div>
+
           <div className="card analysis">
             <h2>AI Analysis</h2>
             <pre>{result.ai_analysis}</pre>
