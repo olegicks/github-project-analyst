@@ -1,0 +1,157 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #f5f5f5;
+  color: #111;
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 70px 24px;
+}
+
+.hero {
+  text-align: center;
+}
+
+.hero p {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.hero h1 {
+  margin: 14px 0 10px;
+  font-size: 48px;
+}
+
+.hero > span {
+  color: #666;
+}
+
+.search {
+  display: flex;
+  max-width: 720px;
+  margin: 32px auto 0;
+  gap: 10px;
+}
+
+.search input {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+button {
+  padding: 15px 24px;
+  border: 0;
+  border-radius: 10px;
+  background: #111;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  margin-top: 15px;
+  color: #b00020;
+}
+
+.results {
+  margin-top: 50px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.stats > div,
+.card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.stats strong {
+  display: block;
+  font-size: 28px;
+}
+
+.stats span {
+  color: #666;
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.row strong {
+  font-size: 13px;
+}
+
+.tag {
+  display: inline-block;
+  margin: 4px;
+  padding: 8px 10px;
+  background: #f1f1f1;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.analysis {
+  margin-top: 14px;
+}
+
+.analysis pre {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #333;
+  font-family: inherit;
+}
+
+@media (max-width: 700px) {
+  .search,
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+}

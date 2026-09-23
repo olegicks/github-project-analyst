@@ -4,14 +4,21 @@ from tempfile import TemporaryDirectory
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from pydantic import BaseModel
 from git import Repo
 
-
 load_dotenv()
 
 app = FastAPI(title="GitHub Project Analyst")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -36,7 +43,6 @@ LANGUAGES = {
     ".html": "HTML",
     ".css": "CSS",
 }
-
 
 DEPENDENCY_FILES = {
     "requirements.txt",
@@ -75,7 +81,7 @@ def analyze_files(path: Path):
                 lines += len(
                     file.read_text(
                         encoding="utf-8",
-                        errors="ignore",
+                        errors="ignore"
                     ).splitlines()
                 )
             except OSError:
@@ -135,18 +141,26 @@ def root():
 @app.post("/analyze")
 def analyze_repository(request: RepositoryRequest):
     if not request.url.startswith("https://github.com/"):
-        raise HTTPException(status_code=400, detail="Invalid GitHub URL")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid GitHub URL"
+        )
 
     with TemporaryDirectory() as temp_dir:
         try:
-            Repo.clone_from(request.url, temp_dir, depth=1)
+            Repo.clone_from(
+                request.url,
+                temp_dir,
+                depth=1
+            )
         except Exception:
             raise HTTPException(
                 status_code=400,
-                detail="Could not clone repository",
+                detail="Could not clone repository"
             )
 
         path = Path(temp_dir)
+
         files, languages, dependencies, lines = analyze_files(path)
 
         directories = sorted({
@@ -163,7 +177,7 @@ def analyze_repository(request: RepositoryRequest):
             if readme_path.exists():
                 readme = readme_path.read_text(
                     encoding="utf-8",
-                    errors="ignore",
+                    errors="ignore"
                 )[:10000]
                 break
 
