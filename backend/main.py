@@ -1,12 +1,19 @@
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from openai import OpenAI
 from pydantic import BaseModel
 from git import Repo
 
 
+load_dotenv()
+
 app = FastAPI(title="GitHub Project Analyst")
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class RepositoryRequest(BaseModel):
@@ -65,11 +72,59 @@ def analyze_files(path: Path):
             languages[language] = languages.get(language, 0) + 1
 
             try:
-                lines += len(file.read_text(encoding="utf-8", errors="ignore").splitlines())
+                lines += len(
+                    file.read_text(
+                        encoding="utf-8",
+                        errors="ignore",
+                    ).splitlines()
+                )
             except OSError:
                 pass
 
     return files, languages, dependencies, lines
+
+
+def generate_ai_analysis(metadata):
+    prompt = f"""
+You are a senior software engineer analyzing a GitHub repository.
+
+Analyze the following repository metadata and README.
+
+Repository:
+{metadata["repository"]}
+
+Files: {metadata["files"]}
+Lines of code: {metadata["lines_of_code"]}
+
+Languages:
+{metadata["languages"]}
+
+Dependency files:
+{metadata["dependencies"]}
+
+Directories:
+{metadata["directories"]}
+
+README:
+{metadata["readme"] or "No README found."}
+
+Provide a concise technical analysis with these sections:
+
+1. Project Overview
+2. Technology Stack
+3. Architecture
+4. Code Quality
+5. Potential Improvements
+
+Do not invent technologies or features that are not supported by the provided information.
+"""
+
+    response = client.responses.create(
+        model="gpt-5.6",
+        input=prompt,
+    )
+
+    return response.output_text
 
 
 @app.get("/")
@@ -112,7 +167,7 @@ def analyze_repository(request: RepositoryRequest):
                 )[:10000]
                 break
 
-        return {
+        metadata = {
             "repository": request.url,
             "files": len(files),
             "lines_of_code": lines,
@@ -120,5 +175,12 @@ def analyze_repository(request: RepositoryRequest):
             "dependencies": dependencies,
             "directories": directories,
             "readme": readme,
+        }
+
+        analysis = generate_ai_analysis(metadata)
+
+        return {
+            **metadata,
+            "ai_analysis": analysis,
             "structure": files[:100],
         }
