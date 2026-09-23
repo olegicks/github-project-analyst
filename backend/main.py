@@ -84,6 +84,7 @@ ENTRY_POINT_NAMES = {
     "app.ts",
     "server.js",
     "server.ts",
+    "manage.py",
     "Program.cs",
     "Main.java",
 }
@@ -110,7 +111,7 @@ TEST_NAMES = {
 }
 
 
-def analyze_files(path: Path):
+def analyze_files(path):
     files = []
     languages = {}
     dependencies = []
@@ -176,7 +177,7 @@ def analyze_files(path: Path):
         "files": files,
         "languages": languages,
         "dependencies": dependencies,
-        "entry_points": entry_points,
+        "entry_points": sorted(set(entry_points)),
         "important_files": sorted(set(important_files)),
         "config_files": config_files,
         "test_files": test_files,
@@ -347,6 +348,13 @@ def analyze_repository(request: RepositoryRequest):
                 )[:10000]
                 break
 
+        entry_points = sorted(
+            set(
+                data["entry_points"]
+                + source_analysis["entry_points"]
+            )
+        )
+
         metadata = {
             "repository": request.url,
             "files": len(data["files"]),
@@ -355,7 +363,7 @@ def analyze_repository(request: RepositoryRequest):
             "languages": data["languages"],
             "dependencies": data["dependencies"],
             "directories": data["directories"],
-            "entry_points": data["entry_points"],
+            "entry_points": entry_points,
             "important_files": data["important_files"],
             "config_files": data["config_files"],
             "test_files": data["test_files"],

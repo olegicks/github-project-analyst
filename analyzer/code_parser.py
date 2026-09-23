@@ -4,27 +4,39 @@ from pathlib import Path
 
 
 SOURCE_EXTENSIONS = {
-    ".py",
-    ".js",
-    ".jsx",
-    ".ts",
-    ".tsx",
-    ".java",
-    ".go",
-    ".rs",
-    ".cpp",
-    ".c",
-    ".h",
-    ".hpp",
-    ".cs",
-    ".php",
-    ".rb",
+    ".py", ".js", ".jsx", ".ts", ".tsx",
+    ".java", ".go", ".rs", ".cpp", ".c",
+    ".h", ".hpp", ".cs", ".php", ".rb",
 }
 
 
-def read_source(path: Path):
+ENTRY_POINT_NAMES = {
+    "main.py",
+    "main.js",
+    "main.ts",
+    "main.go",
+    "main.rs",
+    "index.js",
+    "index.ts",
+    "index.jsx",
+    "index.tsx",
+    "app.py",
+    "app.js",
+    "app.ts",
+    "server.js",
+    "server.ts",
+    "manage.py",
+    "Program.cs",
+    "Main.java",
+}
+
+
+def read_source(path):
     try:
-        return path.read_text(encoding="utf-8", errors="ignore")
+        return path.read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
     except OSError:
         return ""
 
@@ -57,15 +69,52 @@ def parse_python(source):
             if node.module:
                 result["imports"].append(node.module)
 
-    patterns = [
-        r'@(app|router)\.(get|post|put|patch|delete)\(["\']([^"\']+)',
-        r'path\(["\']([^"\']+)',
-        r're_path\(["\']([^"\']+)',
-    ]
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
 
-    for pattern in patterns:
-        for match in re.finditer(pattern, source):
-            result["endpoints"].append(match.group(match.lastindex))
+        if not isinstance(node.func, ast.Name):
+            continue
+
+        if node.func.id not in {"path", "re_path"}:
+            continue
+
+        if not node.args:
+            continue
+
+        if isinstance(node.args[0], ast.Constant):
+            result["endpoints"].append(str(node.args[0].value))
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        if not isinstance(node.func, ast.Attribute):
+            continue
+
+        if node.func.attr not in {
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+        }:
+            continue
+
+        if not node.args:
+            continue
+
+        if not isinstance(node.args[0], ast.Constant):
+            continue
+
+        parent = node.func.value
+
+        if isinstance(parent, ast.Name) and parent.id in {
+            "app",
+            "router",
+            "api",
+        }:
+            result["endpoints"].append(str(node.args[0].value))
 
     return result
 
@@ -93,7 +142,7 @@ def parse_generic(source):
         r"^\s*import\s+([^\s;]+)",
         r"^\s*from\s+([^\s]+)\s+import",
         r'^\s*#include\s*[<"]([^>"]+)',
-        r'^\s*use\s+([^;]+)',
+        r"^\s*use\s+([^;]+)",
         r'^\s*require\(["\']([^"\']+)',
     ]
 
@@ -113,16 +162,19 @@ def parse_generic(source):
         )
 
     endpoint_pattern = (
-        r'\.(get|post|put|patch|delete)\(\s*["\']([^"\']+)'
+        r'\b(?:app|router)\.'
+        r'(?:get|post|put|patch|delete)'
+        r'\(\s*["\']([^"\']+)'
     )
 
-    for match in re.finditer(endpoint_pattern, source):
-        result["endpoints"].append(match.group(2))
+    result["endpoints"].extend(
+        re.findall(endpoint_pattern, source)
+    )
 
     return result
 
 
-def analyze_source_file(path: Path):
+def analyze_source_file(path):
     source = read_source(path)
 
     if not source:
@@ -144,12 +196,13 @@ def analyze_source_file(path: Path):
     }
 
 
-def analyze_source_tree(root: Path):
+def analyze_source_tree(root):
     files = []
     functions = []
     classes = []
     imports = []
     endpoints = []
+    entry_points = []
 
     for path in root.rglob("*"):
         if (
@@ -166,6 +219,9 @@ def analyze_source_tree(root: Path):
             "file": relative,
             **analysis,
         })
+
+        if path.name in ENTRY_POINT_NAMES:
+            entry_points.append(relative)
 
         functions.extend(
             (relative, name)
@@ -193,4 +249,5 @@ def analyze_source_tree(root: Path):
         "classes": classes,
         "imports": imports,
         "endpoints": endpoints,
+        "entry_points": sorted(set(entry_points)),
     }
