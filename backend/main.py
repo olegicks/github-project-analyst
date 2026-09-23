@@ -36,23 +36,75 @@ LANGUAGES = {
     ".java": "Java",
     ".cpp": "C++",
     ".c": "C",
+    ".h": "C/C++",
+    ".hpp": "C++",
     ".rs": "Rust",
     ".go": "Go",
     ".php": "PHP",
     ".rb": "Ruby",
+    ".swift": "Swift",
+    ".kt": "Kotlin",
+    ".cs": "C#",
     ".html": "HTML",
     ".css": "CSS",
+    ".scss": "SCSS",
+    ".sql": "SQL",
 }
 
 DEPENDENCY_FILES = {
     "requirements.txt",
     "package.json",
     "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
     "pyproject.toml",
     "pom.xml",
     "build.gradle",
     "Cargo.toml",
     "go.mod",
+    "composer.json",
+    "Gemfile",
+    "Package.swift",
+}
+
+ENTRY_POINT_NAMES = {
+    "main.py",
+    "main.js",
+    "main.ts",
+    "main.go",
+    "main.rs",
+    "index.js",
+    "index.ts",
+    "index.jsx",
+    "index.tsx",
+    "app.py",
+    "app.js",
+    "app.ts",
+    "server.js",
+    "server.ts",
+    "Program.cs",
+    "Main.java",
+}
+
+CONFIG_FILES = {
+    "Dockerfile",
+    "docker-compose.yml",
+    "docker-compose.yaml",
+    ".dockerignore",
+    ".gitignore",
+    "Makefile",
+    "CMakeLists.txt",
+    "vite.config.js",
+    "vite.config.ts",
+    "tsconfig.json",
+    "webpack.config.js",
+}
+
+TEST_NAMES = {
+    "test",
+    "tests",
+    "__tests__",
+    "spec",
 }
 
 
@@ -60,6 +112,11 @@ def analyze_files(path: Path):
     files = []
     languages = {}
     dependencies = []
+    entry_points = []
+    important_files = []
+    config_files = []
+    test_files = []
+    directories = set()
     lines = 0
 
     for file in path.rglob("*"):
@@ -67,10 +124,36 @@ def analyze_files(path: Path):
             continue
 
         relative = file.relative_to(path)
-        files.append(relative.as_posix())
+        relative_str = relative.as_posix()
+        files.append(relative_str)
+
+        if len(relative.parts) > 1:
+            directories.add(relative.parts[0])
 
         if file.name in DEPENDENCY_FILES:
-            dependencies.append(relative.as_posix())
+            dependencies.append(relative_str)
+
+        if file.name in ENTRY_POINT_NAMES:
+            entry_points.append(relative_str)
+
+        if file.name in CONFIG_FILES:
+            config_files.append(relative_str)
+
+        if any(part.lower() in TEST_NAMES for part in relative.parts):
+            test_files.append(relative_str)
+
+        if (
+            file.name.lower() in {
+                "readme.md",
+                "readme.txt",
+                "license",
+                "license.md",
+            }
+            or file.name in DEPENDENCY_FILES
+            or file.name in ENTRY_POINT_NAMES
+            or file.name in CONFIG_FILES
+        ):
+            important_files.append(relative_str)
 
         language = LANGUAGES.get(file.suffix.lower())
 
@@ -81,20 +164,86 @@ def analyze_files(path: Path):
                 lines += len(
                     file.read_text(
                         encoding="utf-8",
-                        errors="ignore"
+                        errors="ignore",
                     ).splitlines()
                 )
             except OSError:
                 pass
 
-    return files, languages, dependencies, lines
+    return {
+        "files": files,
+        "languages": languages,
+        "dependencies": dependencies,
+        "entry_points": entry_points,
+        "important_files": sorted(set(important_files)),
+        "config_files": config_files,
+        "test_files": test_files,
+        "directories": sorted(directories),
+        "lines_of_code": lines,
+    }
+
+
+def detect_project_signals(data):
+    languages = set(data["languages"])
+    dependencies = set(data["dependencies"])
+    files = data["file_list"]
+    readme = (data["readme"] or "").lower()
+
+    technologies = []
+
+    if "Python" in languages:
+        technologies.append("Python")
+
+    if "JavaScript" in languages or "TypeScript" in languages:
+        technologies.append("Node.js ecosystem")
+
+    if "Java" in languages:
+        technologies.append("Java")
+
+    if "C++" in languages or "C" in languages:
+        technologies.append("C/C++")
+
+    if "Rust" in languages:
+        technologies.append("Rust")
+
+    if "Go" in languages:
+        technologies.append("Go")
+
+    if "react" in readme:
+        technologies.append("React")
+
+    dependency_map = {
+        "requirements.txt": "Python dependencies",
+        "package.json": "Node.js dependencies",
+        "Cargo.toml": "Rust dependencies",
+        "go.mod": "Go modules",
+        "pom.xml": "Maven",
+        "build.gradle": "Gradle",
+        "composer.json": "PHP Composer",
+        "Gemfile": "Ruby Bundler",
+    }
+
+    for dependency in dependencies:
+        name = Path(dependency).name
+
+        if name in dependency_map:
+            technologies.append(dependency_map[name])
+
+    if any(file.lower().endswith("dockerfile") for file in files):
+        technologies.append("Docker")
+
+    if any(file.startswith(".github/") for file in files):
+        technologies.append("GitHub Actions")
+
+    return sorted(set(technologies))
 
 
 def generate_ai_analysis(metadata):
     prompt = f"""
-You are a senior software engineer analyzing a GitHub repository.
+You are a senior software engineer performing a repository analysis.
 
-Analyze the following repository metadata and README.
+Analyze the repository using ONLY the provided information.
+Do not invent frameworks, databases, architecture, features, or technologies.
 
 Repository:
 {metadata["repository"]}
@@ -105,24 +254,41 @@ Lines of code: {metadata["lines_of_code"]}
 Languages:
 {metadata["languages"]}
 
-Dependency files:
+Dependencies:
 {metadata["dependencies"]}
 
 Directories:
 {metadata["directories"]}
 
+Entry points:
+{metadata["entry_points"]}
+
+Important files:
+{metadata["important_files"]}
+
+Configuration:
+{metadata["config_files"]}
+
+Tests:
+{metadata["test_files"]}
+
+Detected technologies:
+{metadata["technologies"]}
+
 README:
 {metadata["readme"] or "No README found."}
 
-Provide a concise technical analysis with these sections:
+Provide a concise technical analysis with:
 
 1. Project Overview
 2. Technology Stack
-3. Architecture
-4. Code Quality
-5. Potential Improvements
+3. Project Structure
+4. Architecture
+5. Code Quality
+6. Testing
+7. Potential Improvements
 
-Do not invent technologies or features that are not supported by the provided information.
+Clearly distinguish detected facts from reasonable observations.
 """
 
     response = client.responses.create(
@@ -143,7 +309,7 @@ def analyze_repository(request: RepositoryRequest):
     if not request.url.startswith("https://github.com/"):
         raise HTTPException(
             status_code=400,
-            detail="Invalid GitHub URL"
+            detail="Invalid GitHub URL",
         )
 
     with TemporaryDirectory() as temp_dir:
@@ -151,23 +317,16 @@ def analyze_repository(request: RepositoryRequest):
             Repo.clone_from(
                 request.url,
                 temp_dir,
-                depth=1
+                depth=1,
             )
         except Exception:
             raise HTTPException(
                 status_code=400,
-                detail="Could not clone repository"
+                detail="Could not clone repository",
             )
 
         path = Path(temp_dir)
-
-        files, languages, dependencies, lines = analyze_files(path)
-
-        directories = sorted({
-            file.split("/")[0]
-            for file in files
-            if "/" in file
-        })
+        data = analyze_files(path)
 
         readme = None
 
@@ -177,24 +336,30 @@ def analyze_repository(request: RepositoryRequest):
             if readme_path.exists():
                 readme = readme_path.read_text(
                     encoding="utf-8",
-                    errors="ignore"
+                    errors="ignore",
                 )[:10000]
                 break
 
         metadata = {
             "repository": request.url,
-            "files": len(files),
-            "lines_of_code": lines,
-            "languages": languages,
-            "dependencies": dependencies,
-            "directories": directories,
+            "files": len(data["files"]),
+            "file_list": data["files"],
+            "lines_of_code": data["lines_of_code"],
+            "languages": data["languages"],
+            "dependencies": data["dependencies"],
+            "directories": data["directories"],
+            "entry_points": data["entry_points"],
+            "important_files": data["important_files"],
+            "config_files": data["config_files"],
+            "test_files": data["test_files"],
             "readme": readme,
         }
 
-        analysis = generate_ai_analysis(metadata)
+        metadata["technologies"] = detect_project_signals(metadata)
+        metadata["ai_analysis"] = generate_ai_analysis(metadata)
 
         return {
             **metadata,
-            "ai_analysis": analysis,
-            "structure": files[:100],
+            "file_list": None,
+            "structure": data["files"][:100],
         }
