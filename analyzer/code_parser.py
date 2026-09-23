@@ -9,34 +9,18 @@ SOURCE_EXTENSIONS = {
     ".h", ".hpp", ".cs", ".php", ".rb",
 }
 
-
 ENTRY_POINT_NAMES = {
-    "main.py",
-    "main.js",
-    "main.ts",
-    "main.go",
-    "main.rs",
-    "index.js",
-    "index.ts",
-    "index.jsx",
-    "index.tsx",
-    "app.py",
-    "app.js",
-    "app.ts",
-    "server.js",
-    "server.ts",
-    "manage.py",
-    "Program.cs",
-    "Main.java",
+    "main.py", "main.js", "main.ts", "main.go", "main.rs",
+    "index.js", "index.ts", "index.jsx", "index.tsx",
+    "app.py", "app.js", "app.ts",
+    "server.js", "server.ts",
+    "manage.py", "Program.cs", "Main.java",
 }
 
 
 def read_source(path):
     try:
-        return path.read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
+        return path.read_text(encoding="utf-8", errors="ignore")
     except OSError:
         return ""
 
@@ -69,52 +53,26 @@ def parse_python(source):
             if node.module:
                 result["imports"].append(node.module)
 
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
+        elif isinstance(node, ast.Call):
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id in {"path", "re_path"}
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+            ):
+                result["endpoints"].append(str(node.args[0].value))
 
-        if not isinstance(node.func, ast.Name):
-            continue
-
-        if node.func.id not in {"path", "re_path"}:
-            continue
-
-        if not node.args:
-            continue
-
-        if isinstance(node.args[0], ast.Constant):
-            result["endpoints"].append(str(node.args[0].value))
-
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-
-        if not isinstance(node.func, ast.Attribute):
-            continue
-
-        if node.func.attr not in {
-            "get",
-            "post",
-            "put",
-            "patch",
-            "delete",
-        }:
-            continue
-
-        if not node.args:
-            continue
-
-        if not isinstance(node.args[0], ast.Constant):
-            continue
-
-        parent = node.func.value
-
-        if isinstance(parent, ast.Name) and parent.id in {
-            "app",
-            "router",
-            "api",
-        }:
-            result["endpoints"].append(str(node.args[0].value))
+            elif (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in {"app", "router", "api"}
+                and node.func.attr in {
+                    "get", "post", "put", "patch", "delete"
+                }
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+            ):
+                result["endpoints"].append(str(node.args[0].value))
 
     return result
 
@@ -127,48 +85,36 @@ def parse_generic(source):
         "endpoints": [],
     }
 
-    function_patterns = [
-        r"\bfunction\s+([A-Za-z_]\w*)",
-        r"\bfunc\s+([A-Za-z_]\w*)",
-        r"\b(?:public|private|protected|static)\s+[\w<>\[\]]+\s+([A-Za-z_]\w*)\s*\(",
-    ]
+    patterns = {
+        "functions": [
+            r"\bfunction\s+([A-Za-z_]\w*)",
+            r"\bfunc\s+([A-Za-z_]\w*)",
+            r"\b(?:public|private|protected|static)\s+[\w<>\[\]]+\s+([A-Za-z_]\w*)\s*\(",
+        ],
+        "classes": [
+            r"\bclass\s+([A-Za-z_]\w*)",
+            r"\bstruct\s+([A-Za-z_]\w*)",
+        ],
+        "imports": [
+            r"^\s*import\s+([^\s;]+)",
+            r"^\s*from\s+([^\s]+)\s+import",
+            r'^\s*#include\s*[<"]([^>"]+)',
+            r"^\s*use\s+([^;]+)",
+            r'^\s*require\(["\']([^"\']+)',
+        ],
+    }
 
-    class_patterns = [
-        r"\bclass\s+([A-Za-z_]\w*)",
-        r"\bstruct\s+([A-Za-z_]\w*)",
-    ]
-
-    import_patterns = [
-        r"^\s*import\s+([^\s;]+)",
-        r"^\s*from\s+([^\s]+)\s+import",
-        r'^\s*#include\s*[<"]([^>"]+)',
-        r"^\s*use\s+([^;]+)",
-        r'^\s*require\(["\']([^"\']+)',
-    ]
-
-    for pattern in function_patterns:
-        result["functions"].extend(
-            re.findall(pattern, source, re.MULTILINE)
-        )
-
-    for pattern in class_patterns:
-        result["classes"].extend(
-            re.findall(pattern, source, re.MULTILINE)
-        )
-
-    for pattern in import_patterns:
-        result["imports"].extend(
-            re.findall(pattern, source, re.MULTILINE)
-        )
-
-    endpoint_pattern = (
-        r'\b(?:app|router)\.'
-        r'(?:get|post|put|patch|delete)'
-        r'\(\s*["\']([^"\']+)'
-    )
+    for key, regexes in patterns.items():
+        for regex in regexes:
+            result[key].extend(re.findall(regex, source, re.MULTILINE))
 
     result["endpoints"].extend(
-        re.findall(endpoint_pattern, source)
+        re.findall(
+            r'\b(?:app|router)\.'
+            r'(?:get|post|put|patch|delete)'
+            r'\(\s*["\']([^"\']+)',
+            source,
+        )
     )
 
     return result
@@ -193,6 +139,89 @@ def analyze_source_file(path):
     return {
         key: sorted(set(value))
         for key, value in result.items()
+    }
+
+
+def resolve_python_import(import_name, current_file, files):
+    current_dir = current_file.parent
+
+    candidates = []
+
+    if import_name.startswith("."):
+        dots = len(import_name) - len(import_name.lstrip("."))
+        module = import_name[dots:].replace(".", "/")
+
+        base = current_dir
+        for _ in range(dots - 1):
+            base = base.parent
+
+        candidates.extend([
+            base / f"{module}.py",
+            base / module / "__init__.py",
+        ])
+
+    else:
+        module = import_name.replace(".", "/")
+        candidates.extend([
+            Path(f"{module}.py"),
+            Path(module) / "__init__.py",
+        ])
+
+    normalized = {
+        Path(file).as_posix(): file
+        for file in files
+    }
+
+    for candidate in candidates:
+        key = candidate.as_posix().lstrip("./")
+
+        if key in normalized:
+            return normalized[key]
+
+    return None
+
+
+def build_dependency_graph(root, parsed_files):
+    files = [
+        Path(item["file"])
+        for item in parsed_files
+    ]
+
+    graph = []
+    edges = []
+
+    for item in parsed_files:
+        source_file = Path(item["file"])
+
+        for import_name in item["imports"]:
+            target = None
+
+            if source_file.suffix.lower() == ".py":
+                target = resolve_python_import(
+                    import_name,
+                    source_file,
+                    files,
+                )
+
+            if target and target != source_file:
+                edges.append({
+                    "from": source_file.as_posix(),
+                    "to": target.as_posix(),
+                    "import": import_name,
+                })
+
+    connected = set()
+
+    for edge in edges:
+        connected.add(edge["from"])
+        connected.add(edge["to"])
+
+    for file in connected:
+        graph.append(file)
+
+    return {
+        "edges": edges,
+        "connected_files": sorted(graph),
     }
 
 
@@ -243,6 +272,8 @@ def analyze_source_tree(root):
             for endpoint in analysis["endpoints"]
         )
 
+    dependency_graph = build_dependency_graph(root, files)
+
     return {
         "files": files,
         "functions": functions,
@@ -250,4 +281,5 @@ def analyze_source_tree(root):
         "imports": imports,
         "endpoints": endpoints,
         "entry_points": sorted(set(entry_points)),
+        "dependency_graph": dependency_graph,
     }

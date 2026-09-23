@@ -70,23 +70,11 @@ DEPENDENCY_FILES = {
 }
 
 ENTRY_POINT_NAMES = {
-    "main.py",
-    "main.js",
-    "main.ts",
-    "main.go",
-    "main.rs",
-    "index.js",
-    "index.ts",
-    "index.jsx",
-    "index.tsx",
-    "app.py",
-    "app.js",
-    "app.ts",
-    "server.js",
-    "server.ts",
-    "manage.py",
-    "Program.cs",
-    "Main.java",
+    "main.py", "main.js", "main.ts", "main.go", "main.rs",
+    "index.js", "index.ts", "index.jsx", "index.tsx",
+    "app.py", "app.js", "app.ts",
+    "server.js", "server.ts",
+    "manage.py", "Program.cs", "Main.java",
 }
 
 CONFIG_FILES = {
@@ -281,6 +269,9 @@ Detected technologies:
 Source code analysis:
 {metadata["source_analysis"]}
 
+Dependency graph:
+{metadata["dependency_graph"]}
+
 README:
 {metadata["readme"] or "No README found."}
 
@@ -290,9 +281,10 @@ Provide a concise technical analysis with:
 2. Technology Stack
 3. Project Structure
 4. Architecture
-5. Code Quality
-6. Testing
-7. Potential Improvements
+5. Dependency Structure
+6. Code Quality
+7. Testing
+8. Potential Improvements
 
 Clearly distinguish detected facts from reasonable observations.
 """
@@ -374,6 +366,7 @@ def analyze_repository(request: RepositoryRequest):
                 "imports": len(source_analysis["imports"]),
                 "endpoints": len(source_analysis["endpoints"]),
             },
+            "dependency_graph": source_analysis["dependency_graph"],
         }
 
         metadata["technologies"] = detect_project_signals(metadata)
