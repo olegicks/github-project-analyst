@@ -23,16 +23,17 @@ main {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #666;
+  color: #555;
 }
 
 .hero h1 {
   margin: 14px 0 10px;
   font-size: 48px;
+  color: #111;
 }
 
 .hero > span {
-  color: #666;
+  color: #555;
 }
 
 .search {
@@ -45,9 +46,15 @@ main {
 .search input {
   flex: 1;
   padding: 15px;
-  border: 1px solid #ccc;
+  border: 1px solid #bbb;
   border-radius: 10px;
   font-size: 14px;
+  color: #111;
+  background: white;
+}
+
+.search input::placeholder {
+  color: #777;
 }
 
 button {
@@ -85,15 +92,17 @@ button:disabled {
   border: 1px solid #ddd;
   border-radius: 16px;
   padding: 22px;
+  color: #111;
 }
 
 .stats strong {
   display: block;
   font-size: 28px;
+  color: #111;
 }
 
 .stats span {
-  color: #666;
+  color: #555;
   font-size: 13px;
 }
 
@@ -107,6 +116,7 @@ button:disabled {
 .card h2 {
   margin-top: 0;
   font-size: 18px;
+  color: #111;
 }
 
 .row {
@@ -114,19 +124,22 @@ button:disabled {
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
+  color: #222;
 }
 
 .row strong {
   font-size: 13px;
+  color: #111;
 }
 
 .tag {
   display: inline-block;
   margin: 4px;
   padding: 8px 10px;
-  background: #f1f1f1;
+  background: #eee;
   border-radius: 8px;
   font-size: 13px;
+  color: #111;
 }
 
 .analysis {
