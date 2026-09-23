@@ -46,7 +46,9 @@ function App() {
     <main>
       <section className="hero">
         <p>GITHUB PROJECT ANALYST</p>
+
         <h1>Understand any codebase.</h1>
+
         <span>
           AI-powered repository analysis for architecture, technologies and
           code quality.
@@ -91,14 +93,44 @@ function App() {
             </div>
           </div>
 
+          <div className="source-stats">
+            <div>
+              <strong>{result.source_analysis.functions}</strong>
+              <span>Functions</span>
+            </div>
+
+            <div>
+              <strong>{result.source_analysis.classes}</strong>
+              <span>Classes</span>
+            </div>
+
+            <div>
+              <strong>{result.source_analysis.imports}</strong>
+              <span>Imports</span>
+            </div>
+
+            <div>
+              <strong>{result.source_analysis.endpoints}</strong>
+              <span>API endpoints</span>
+            </div>
+          </div>
+
           <div className="grid">
             <div className="card">
               <h2>Technology stack</h2>
 
-              {Object.entries(result.languages).map(([language, count]) => (
-                <div className="row" key={language}>
-                  <span>{language}</span>
-                  <strong>{count} files</strong>
+              {Object.entries(result.languages).map(
+                ([language, count]) => (
+                  <div className="row" key={language}>
+                    <span>{language}</span>
+                    <strong>{count} files</strong>
+                  </div>
+                )
+              )}
+
+              {result.technologies.map((technology) => (
+                <div className="tag" key={technology}>
+                  {technology}
                 </div>
               ))}
             </div>
@@ -116,6 +148,44 @@ function App() {
                 <span>No directories detected.</span>
               )}
             </div>
+          </div>
+
+          <div className="card">
+            <h2>Source code</h2>
+
+            <div className="source-list">
+              <div>
+                <span>Entry points</span>
+                <strong>{result.entry_points.length}</strong>
+              </div>
+
+              <div>
+                <span>Important files</span>
+                <strong>{result.important_files.length}</strong>
+              </div>
+
+              <div>
+                <span>Configuration files</span>
+                <strong>{result.config_files.length}</strong>
+              </div>
+
+              <div>
+                <span>Test files</span>
+                <strong>{result.test_files.length}</strong>
+              </div>
+            </div>
+
+            {result.entry_points.length > 0 && (
+              <>
+                <h3>Entry points</h3>
+
+                <div className="file-list">
+                  {result.entry_points.map((file) => (
+                    <code key={file}>{file}</code>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="card analysis">

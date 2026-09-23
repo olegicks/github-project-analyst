@@ -80,13 +80,15 @@ button:disabled {
   margin-top: 50px;
 }
 
-.stats {
+.stats,
+.source-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 
 .stats > div,
+.source-stats > div,
 .card {
   background: white;
   border: 1px solid #ddd;
@@ -95,15 +97,21 @@ button:disabled {
   color: #111;
 }
 
-.stats strong {
+.stats strong,
+.source-stats strong {
   display: block;
   font-size: 28px;
   color: #111;
 }
 
-.stats span {
+.stats span,
+.source-stats span {
   color: #555;
   font-size: 13px;
+}
+
+.source-stats {
+  margin-top: 14px;
 }
 
 .grid {
@@ -113,10 +121,23 @@ button:disabled {
   margin-top: 14px;
 }
 
+.card {
+  margin-top: 14px;
+}
+
+.grid .card {
+  margin-top: 0;
+}
+
 .card h2 {
   margin-top: 0;
   font-size: 18px;
   color: #111;
+}
+
+.card h3 {
+  margin: 24px 0 10px;
+  font-size: 14px;
 }
 
 .row {
@@ -142,8 +163,41 @@ button:disabled {
   color: #111;
 }
 
-.analysis {
-  margin-top: 14px;
+.source-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.source-list div {
+  padding: 14px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.source-list span {
+  display: block;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.source-list strong {
+  font-size: 20px;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-list code {
+  padding: 9px 11px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #222;
 }
 
 .analysis pre {
@@ -160,7 +214,12 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .stats {
+  .stats,
+  .source-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .source-list {
     grid-template-columns: 1fr 1fr;
   }
 

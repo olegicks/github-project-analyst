@@ -9,6 +9,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 from git import Repo
 
+from analyzer.code_parser import analyze_source_tree
+
 load_dotenv()
 
 app = FastAPI(title="GitHub Project Analyst")
@@ -275,6 +277,9 @@ Tests:
 Detected technologies:
 {metadata["technologies"]}
 
+Source code analysis:
+{metadata["source_analysis"]}
+
 README:
 {metadata["readme"] or "No README found."}
 
@@ -326,7 +331,9 @@ def analyze_repository(request: RepositoryRequest):
             )
 
         path = Path(temp_dir)
+
         data = analyze_files(path)
+        source_analysis = analyze_source_tree(path)
 
         readme = None
 
@@ -353,6 +360,12 @@ def analyze_repository(request: RepositoryRequest):
             "config_files": data["config_files"],
             "test_files": data["test_files"],
             "readme": readme,
+            "source_analysis": {
+                "functions": len(source_analysis["functions"]),
+                "classes": len(source_analysis["classes"]),
+                "imports": len(source_analysis["imports"]),
+                "endpoints": len(source_analysis["endpoints"]),
+            },
         }
 
         metadata["technologies"] = detect_project_signals(metadata)
