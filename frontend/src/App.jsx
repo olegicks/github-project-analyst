@@ -15,6 +15,25 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "http://127.0.0.1:8000";
 
+const EXAMPLE_REPOSITORIES = [
+  {
+    name: "restaurant-service",
+    url: "https://github.com/olegicks/restaurant-service",
+  },
+  {
+    name: "ai-appsec-reviewer",
+    url: "https://github.com/olegicks/ai-appsec-reviewer",
+  },
+  {
+    name: "car-price-predictor",
+    url: "https://github.com/olegicks/car-price-predictor",
+  },
+  {
+    name: "cloudops-dashboard",
+    url: "https://github.com/olegicks/cloudops-dashboard",
+  },
+];
+
 function FileNode({ data }) {
   return (
     <div className="file-node">
@@ -60,6 +79,366 @@ function Info({ label, value }) {
     <div>
       <span>{label}</span>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+function renderInlineMarkdown(text) {
+  const parts = text.split(
+    /(\*\*.*?\*\*|`.*?`|\*[^*]+\*)/g
+  );
+
+  return parts.map((part, index) => {
+    if (
+      part.startsWith("**") &&
+      part.endsWith("**")
+    ) {
+      return (
+        <strong key={index}>
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    if (
+      part.startsWith("`") &&
+      part.endsWith("`")
+    ) {
+      return (
+        <code key={index}>
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+
+    if (
+      part.startsWith("*") &&
+      part.endsWith("*")
+    ) {
+      return (
+        <em key={index}>
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+
+    return part;
+  });
+}
+
+function cleanHeading(text) {
+  return text.replace(
+    /^\d+\.\s*/,
+    ""
+  );
+}
+
+function MarkdownTable({ lines }) {
+  if (lines.length < 2) {
+    return null;
+  }
+
+  const parseRow = (line) =>
+    line
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => cell.trim());
+
+  const headers = parseRow(lines[0]);
+
+  const rows = lines
+    .slice(2)
+    .map(parseRow)
+    .filter((row) =>
+      row.some((cell) => cell.length > 0)
+    );
+
+  return (
+    <div className="markdown-table-wrapper">
+      <table className="markdown-table">
+        <thead>
+          <tr>
+            {headers.map((header, index) => (
+              <th key={index}>
+                {renderInlineMarkdown(header)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {headers.map((_, cellIndex) => (
+                <td key={cellIndex}>
+                  {renderInlineMarkdown(
+                    row[cellIndex] || ""
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function MarkdownContent({ content }) {
+  if (!content) {
+    return (
+      <div className="markdown-empty">
+        No AI analysis available.
+      </div>
+    );
+  }
+
+  const lines = content.split(/\r?\n/);
+  const elements = [];
+
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    if (
+      trimmed === "---" ||
+      trimmed === "\\---"
+    ) {
+      elements.push(
+        <hr
+          className="markdown-divider"
+          key={elements.length}
+        />
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("```")) {
+      const codeLines = [];
+
+      index += 1;
+
+      while (
+        index < lines.length &&
+        !lines[index].trim().startsWith("```")
+      ) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+
+      elements.push(
+        <pre
+          className="markdown-code"
+          key={elements.length}
+        >
+          <code>
+            {codeLines.join("\n")}
+          </code>
+        </pre>
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (
+      trimmed.startsWith("|") &&
+      index + 1 < lines.length &&
+      lines[index + 1]
+        .trim()
+        .match(/^\|?[\s|:-]+\|?$/)
+    ) {
+      const tableLines = [
+        lines[index],
+        lines[index + 1],
+      ];
+
+      index += 2;
+
+      while (
+        index < lines.length &&
+        lines[index].trim().startsWith("|")
+      ) {
+        tableLines.push(lines[index]);
+        index += 1;
+      }
+
+      elements.push(
+        <MarkdownTable
+          lines={tableLines}
+          key={elements.length}
+        />
+      );
+
+      continue;
+    }
+
+    if (trimmed.startsWith("#### ")) {
+      elements.push(
+        <h3
+          className="markdown-h3"
+          key={elements.length}
+        >
+          {renderInlineMarkdown(
+            cleanHeading(trimmed.slice(5))
+          )}
+        </h3>
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("### ")) {
+      elements.push(
+        <h2
+          className="markdown-main-heading"
+          key={elements.length}
+        >
+          {renderInlineMarkdown(
+            cleanHeading(trimmed.slice(4))
+          )}
+        </h2>
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("## ")) {
+      elements.push(
+        <h2
+          className="markdown-main-heading"
+          key={elements.length}
+        >
+          {renderInlineMarkdown(
+            cleanHeading(trimmed.slice(3))
+          )}
+        </h2>
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("# ")) {
+      elements.push(
+        <h2
+          className="markdown-main-heading"
+          key={elements.length}
+        >
+          {renderInlineMarkdown(
+            cleanHeading(trimmed.slice(2))
+          )}
+        </h2>
+      );
+
+      index += 1;
+      continue;
+    }
+
+    if (
+      trimmed.startsWith("- ") ||
+      trimmed.startsWith("* ")
+    ) {
+      const items = [];
+
+      while (
+        index < lines.length &&
+        (
+          lines[index]
+            .trim()
+            .startsWith("- ") ||
+          lines[index]
+            .trim()
+            .startsWith("* ")
+        )
+      ) {
+        items.push(
+          lines[index]
+            .trim()
+            .slice(2)
+        );
+
+        index += 1;
+      }
+
+      elements.push(
+        <ul
+          className="markdown-list"
+          key={elements.length}
+        >
+          {items.map((item, itemIndex) => (
+            <li key={itemIndex}>
+              {renderInlineMarkdown(item)}
+            </li>
+          ))}
+        </ul>
+      );
+
+      continue;
+    }
+
+    if (/^\d+\.\s/.test(trimmed)) {
+      const items = [];
+
+      while (
+        index < lines.length &&
+        /^\d+\.\s/.test(
+          lines[index].trim()
+        )
+      ) {
+        items.push(
+          lines[index]
+            .trim()
+            .replace(/^\d+\.\s/, "")
+        );
+
+        index += 1;
+      }
+
+      elements.push(
+        <ul
+          className="markdown-list"
+          key={elements.length}
+        >
+          {items.map((item, itemIndex) => (
+            <li key={itemIndex}>
+              {renderInlineMarkdown(item)}
+            </li>
+          ))}
+        </ul>
+      );
+
+      continue;
+    }
+
+    elements.push(
+      <p
+        className="markdown-paragraph"
+        key={elements.length}
+      >
+        {renderInlineMarkdown(trimmed)}
+      </p>
+    );
+
+    index += 1;
+  }
+
+  return (
+    <div className="markdown-content">
+      {elements}
     </div>
   );
 }
@@ -120,6 +499,11 @@ function App() {
     }
   };
 
+  const selectExample = (repositoryUrl) => {
+    setUrl(repositoryUrl);
+    setError("");
+  };
+
   const graph = useMemo(() => {
     if (!result?.dependency_graph) {
       return {
@@ -148,11 +532,11 @@ function App() {
           position: {
             x:
               (index % 5) *
-              240,
+              230,
             y:
               Math.floor(
                 index / 5
-              ) * 130,
+              ) * 120,
           },
           data: {
             label: node.label,
@@ -228,6 +612,7 @@ function App() {
             onChange={(e) =>
               setUrl(e.target.value)
             }
+            placeholder="https://github.com/username/repository"
             onKeyDown={(e) => {
               if (
                 e.key === "Enter"
@@ -235,7 +620,6 @@ function App() {
                 analyze();
               }
             }}
-            placeholder="https://github.com/username/repository"
           />
 
           <button
@@ -246,6 +630,30 @@ function App() {
               ? "Analyzing..."
               : "Analyze"}
           </button>
+        </div>
+
+        <div className="example-repositories">
+          <span className="example-title">
+            Try one of my repositories
+          </span>
+
+          <div className="example-list">
+            {EXAMPLE_REPOSITORIES.map(
+              (repository) => (
+                <button
+                  className="repo-example"
+                  key={repository.url}
+                  onClick={() =>
+                    selectExample(
+                      repository.url
+                    )
+                  }
+                >
+                  {repository.name}
+                </button>
+              )
+            )}
+          </div>
         </div>
 
         {error && (
@@ -585,9 +993,11 @@ function App() {
               AI Analysis
             </h2>
 
-            <pre>
-              {result.ai_analysis}
-            </pre>
+            <MarkdownContent
+              content={
+                result.ai_analysis
+              }
+            />
           </div>
         </section>
       )}

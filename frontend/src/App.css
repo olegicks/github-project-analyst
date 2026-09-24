@@ -10,7 +10,7 @@ body {
 }
 
 main {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: auto;
   padding: 70px 24px;
 }
@@ -72,6 +72,39 @@ button:disabled {
   cursor: default;
 }
 
+.example-repositories {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.example-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 12px;
+}
+
+.example-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.repo-example {
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #444;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.repo-example:hover {
+  background: #f5f5f5;
+}
+
 .error {
   margin-top: 15px;
   color: #b00020;
@@ -102,6 +135,7 @@ button:disabled {
 .source-stats strong {
   display: block;
   font-size: 28px;
+  color: #111;
 }
 
 .stats span,
@@ -132,11 +166,13 @@ button:disabled {
 .card h2 {
   margin: 0;
   font-size: 18px;
+  color: #111;
 }
 
 .card h3 {
   margin: 24px 0 10px;
   font-size: 14px;
+  color: #111;
 }
 
 .row {
@@ -146,8 +182,13 @@ button:disabled {
   border-bottom: 1px solid #eee;
 }
 
+.row span {
+  color: #111;
+}
+
 .row strong {
   font-size: 13px;
+  color: #111;
 }
 
 .tags {
@@ -162,6 +203,7 @@ button:disabled {
   background: #eee;
   border-radius: 8px;
   font-size: 13px;
+  color: #222;
 }
 
 .source-list {
@@ -185,6 +227,7 @@ button:disabled {
 
 .source-list strong {
   font-size: 20px;
+  color: #111;
 }
 
 .file-list {
@@ -198,6 +241,7 @@ button:disabled {
   background: #f5f5f5;
   border-radius: 8px;
   font-size: 13px;
+  color: #222;
 }
 
 .graph-card {
@@ -245,6 +289,7 @@ button:disabled {
   border: 1px solid #bbb;
   border-radius: 10px;
   background: white;
+  color: #111;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
@@ -259,6 +304,7 @@ button:disabled {
 
 .file-node strong {
   font-size: 12px;
+  color: #111;
 }
 
 .file-node span {
@@ -278,6 +324,7 @@ button:disabled {
   border: 1px solid #ddd;
   border-radius: 12px;
   background: white;
+  color: #111;
 }
 
 .details-header {
@@ -289,6 +336,7 @@ button:disabled {
 
 .details-header h3 {
   margin: 0;
+  color: #111;
 }
 
 .close-button {
@@ -310,6 +358,7 @@ button:disabled {
 .file-details > strong {
   font-size: 13px;
   overflow-wrap: anywhere;
+  color: #111;
 }
 
 .file-details > span {
@@ -340,6 +389,7 @@ button:disabled {
 .details-grid strong {
   display: block;
   margin-top: 4px;
+  color: #111;
 }
 
 .empty-graph {
@@ -349,11 +399,143 @@ button:disabled {
   color: #666;
 }
 
-.analysis pre {
-  white-space: pre-wrap;
-  line-height: 1.6;
+/* AI Analysis */
+
+.analysis {
+  color: #111;
+}
+
+.markdown-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
   color: #333;
-  font-family: inherit;
+  line-height: 1.6;
+  text-align: left !important;
+  counter-reset: analysis-section;
+}
+
+.markdown-main-heading {
+  width: 100%;
+  margin: 32px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e5e5;
+  color: #111;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left !important;
+}
+
+.markdown-main-heading::before {
+  counter-increment: analysis-section;
+  content: counter(analysis-section) ". ";
+}
+
+.markdown-h3 {
+  width: 100%;
+  margin: 20px 0 10px;
+  color: #111;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left !important;
+}
+
+.markdown-paragraph {
+  width: 100%;
+  margin: 8px 0;
+  color: #333;
+  text-align: left !important;
+}
+
+.markdown-list {
+  width: 100%;
+  margin: 8px 0 16px;
+  padding-left: 24px;
+  color: #333;
+  text-align: left !important;
+  list-style-position: outside;
+}
+
+.markdown-list li {
+  margin: 5px 0;
+  padding-left: 4px;
+  text-align: left !important;
+}
+
+.markdown-content strong {
+  color: #111;
+}
+
+.markdown-content code {
+  padding: 2px 6px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+  color: #444;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
+}
+
+.markdown-code {
+  width: 100%;
+  margin: 16px 0;
+  padding: 15px;
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f5f5f5;
+  color: #333;
+  text-align: left;
+}
+
+.markdown-code code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #333;
+}
+
+.markdown-table-wrapper {
+  width: 100%;
+  margin: 18px 0;
+  overflow-x: auto;
+}
+
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #333;
+  font-size: 13px;
+  text-align: left;
+}
+
+.markdown-table th {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background: #f5f5f5;
+  color: #111;
+  text-align: left;
+}
+
+.markdown-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  text-align: left;
+}
+
+.markdown-divider {
+  width: 100%;
+  margin: 26px 0;
+  border: 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.markdown-empty {
+  color: #666;
+  text-align: left;
 }
 
 @media (max-width: 800px) {
@@ -389,5 +571,9 @@ button:disabled {
 
   .graph {
     height: 500px;
+  }
+
+  .example-list {
+    gap: 5px;
   }
 }
