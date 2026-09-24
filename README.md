@@ -4,7 +4,7 @@ AI-powered repository analysis tool for understanding unfamiliar GitHub codebase
 
 ## Live Demo
 
-Try the deployed application:
+**Try the deployed application:**
 https://github-project-analyst.vercel.app/
 
 **Frontend:**  
