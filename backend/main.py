@@ -22,6 +22,7 @@ app.add_middleware(
         "http://localhost:5173",
         "https://github-project-analyst.vercel.app",
     ],
+    allow_origin_regex=r"https://github-project-analyst(?:-[a-z0-9-]+)?\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
