@@ -1,16 +1,39 @@
-# React + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite dashboard for GitHub Project Analyst. See the [root README](../README.md) for the full project overview.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run lint
+npm run build
+```
 
-## React Compiler
+Set `VITE_API_URL` to point at the backend (defaults to `http://127.0.0.1:8000`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Structure
 
-## Expanding the ESLint configuration
+```
+src/
+├── App.jsx                 # page state: input, analysis request, results
+├── components/
+│   ├── RepoSearch.jsx      # hero, repository input, examples
+│   ├── AnalysisProgress.jsx
+│   ├── RepoHeader.jsx      # repository title, share and GitHub links
+│   ├── Overview.jsx        # metrics, technology stack, structure, file lists
+│   ├── DependencyGraph.jsx # React Flow graph and file details
+│   ├── AiAnalysis.jsx      # AI analysis with copy / download
+│   ├── Markdown.jsx        # lightweight Markdown renderer
+│   ├── Layout.jsx          # header, footer, theme toggle
+│   └── Icons.jsx
+└── lib/
+    ├── api.js              # backend client with timeout and error messages
+    ├── graph.js            # layered graph layout and highlighting
+    ├── languages.js        # language colors and percentages
+    ├── repository.js       # URL parsing and ?repo= share links
+    └── theme.js            # light / dark theme preference
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+A shared link such as `/?repo=owner/name` opens the dashboard and starts the analysis for that repository.
