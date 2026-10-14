@@ -2,6 +2,8 @@
 
 AI-powered repository analysis tool for understanding unfamiliar GitHub codebases through automated structure analysis, dependency mapping, technology detection, and AI-generated insights.
 
+![Dashboard overview](docs/screenshots/overview.png)
+
 ## Live Demo
 
 **Try the deployed application:**
@@ -14,6 +16,30 @@ https://github-project-analyst.vercel.app
 https://github-project-analyst-api.onrender.com
 
 Paste a public GitHub repository URL into the dashboard and start the analysis.
+
+## Screenshots
+
+The screenshots show this repository analyzed by the dashboard.
+
+### Dependency graph
+
+Files are laid out by import depth. Selecting a file highlights its connections and lists its local imports and the files that import it.
+
+![Dependency graph](docs/screenshots/dependency-graph.png)
+
+### Technology stack and source files
+
+Language shares are weighted by lines of code; vendored and generated files are skipped.
+
+![Technology stack and source files](docs/screenshots/stack.png)
+
+### AI analysis
+
+![AI analysis](docs/screenshots/ai-analysis.png)
+
+### Light theme
+
+![Light theme](docs/screenshots/overview-light.png)
 
 ## Overview
 
