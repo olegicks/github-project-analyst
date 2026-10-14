@@ -9,7 +9,9 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { buildGraph } from "../lib/graph.js";
+import { CloseIcon } from "./Icons.jsx";
 import { Info } from "./Metric.jsx";
+import { Card } from "./Overview.jsx";
 
 function FileNode({ data }) {
   return (
@@ -39,14 +41,18 @@ function FileDetails({ file, onClose }) {
       <div className="details-header">
         <h3>File details</h3>
 
-        <button className="close-button" onClick={onClose}>
-          ×
+        <button
+          className="icon-button"
+          onClick={onClose}
+          aria-label="Close file details"
+        >
+          <CloseIcon />
         </button>
       </div>
 
-      <strong>{file.file}</strong>
+      <code className="details-path">{file.file}</code>
 
-      <span>{file.language}</span>
+      <span className="details-language">{file.language}</span>
 
       <div className="details-grid">
         <Info label="Functions" value={file.functions} />
@@ -66,24 +72,18 @@ export default function DependencyGraphCard({ dependencyGraph, limits }) {
   );
 
   return (
-    <div className="card graph-card">
-      <div className="card-header">
-        <div>
-          <h2>Dependency graph</h2>
-
-          <p>
-            {dependencyGraph.edges.length} connections ·{" "}
-            {dependencyGraph.connected_files.length} connected files
-          </p>
-        </div>
-
-        {dependencyGraph.truncated && (
-          <span className="graph-limit">
+    <Card
+      title="Dependency graph"
+      className="graph-card"
+      meta={`${dependencyGraph.edges.length} connections · ${dependencyGraph.connected_files.length} connected files`}
+      actions={
+        dependencyGraph.truncated && (
+          <span className="badge">
             Large graph · first {limits.graph_nodes} nodes
           </span>
-        )}
-      </div>
-
+        )
+      }
+    >
       {graph.nodes.length ? (
         <div className="graph-layout">
           <div className="graph">
@@ -110,8 +110,8 @@ export default function DependencyGraphCard({ dependencyGraph, limits }) {
           )}
         </div>
       ) : (
-        <div className="empty-graph">No internal dependencies detected.</div>
+        <p className="empty">No internal dependencies detected.</p>
       )}
-    </div>
+    </Card>
   );
 }

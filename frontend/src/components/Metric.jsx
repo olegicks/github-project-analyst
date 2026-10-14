@@ -1,6 +1,6 @@
 export function Metric({ value, label }) {
   return (
-    <div>
+    <div className="metric">
       <strong>{value}</strong>
       <span>{label}</span>
     </div>
@@ -9,7 +9,7 @@ export function Metric({ value, label }) {
 
 export function Info({ label, value }) {
   return (
-    <div>
+    <div className="info">
       <span>{label}</span>
       <strong>{value}</strong>
     </div>

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import DependencyGraphCard from "./components/DependencyGraph.jsx";
+import { Footer, Header } from "./components/Layout.jsx";
 import MarkdownContent from "./components/Markdown.jsx";
 import {
+  Card,
   SourceCodeCard,
   Stats,
   StructureCard,
@@ -42,43 +44,48 @@ function App() {
   };
 
   return (
-    <main>
-      <RepoSearch
-        url={url}
-        onUrlChange={setUrl}
-        onAnalyze={analyze}
-        onSelectExample={selectExample}
-        loading={loading}
-        error={error}
-      />
+    <div className="app">
+      <Header />
 
-      {result && (
-        <section className="results">
-          <Stats result={result} />
+      <main>
+        <RepoSearch
+          url={url}
+          onUrlChange={setUrl}
+          onAnalyze={analyze}
+          onSelectExample={selectExample}
+          loading={loading}
+          error={error}
+        />
 
-          <div className="grid">
-            <TechStackCard
-              languages={result.languages}
-              technologies={result.technologies}
+        {result && (
+          <div className="results">
+            <Stats result={result} />
+
+            <div className="grid">
+              <TechStackCard
+                languages={result.languages}
+                technologies={result.technologies}
+              />
+              <StructureCard directories={result.directories} />
+            </div>
+
+            <SourceCodeCard result={result} />
+
+            <DependencyGraphCard
+              key={result.repository}
+              dependencyGraph={result.dependency_graph}
+              limits={result.limits}
             />
-            <StructureCard directories={result.directories} />
+
+            <Card title="AI analysis" className="analysis">
+              <MarkdownContent content={result.ai_analysis} />
+            </Card>
           </div>
+        )}
+      </main>
 
-          <SourceCodeCard result={result} />
-
-          <DependencyGraphCard
-            key={result.repository}
-            dependencyGraph={result.dependency_graph}
-            limits={result.limits}
-          />
-
-          <div className="card analysis">
-            <h2>AI Analysis</h2>
-            <MarkdownContent content={result.ai_analysis} />
-          </div>
-        </section>
-      )}
-    </main>
+      <Footer />
+    </div>
   );
 }
 

@@ -1,3 +1,5 @@
+import { GitHubIcon } from "./Icons.jsx";
+
 const EXAMPLE_REPOSITORIES = [
   {
     name: "restaurant-service",
@@ -25,51 +27,64 @@ export default function RepoSearch({
   loading,
   error,
 }) {
+  const submit = (event) => {
+    event.preventDefault();
+    onAnalyze();
+  };
+
   return (
     <section className="hero">
-      <p>GITHUB PROJECT ANALYST</p>
+      <span className="eyebrow">AI-powered repository analysis</span>
 
-      <h1>Understand any codebase.</h1>
+      <h1>
+        Understand <span className="gradient-text">any codebase.</span>
+      </h1>
 
-      <span>
-        AI-powered repository analysis for architecture, technologies and
-        code quality.
-      </span>
+      <p className="hero-subtitle">
+        Paste a public GitHub repository to map its structure, technologies
+        and dependencies, and get an AI review of architecture and code
+        quality.
+      </p>
 
-      <div className="search">
-        <input
-          value={url}
-          onChange={(e) => onUrlChange(e.target.value)}
-          placeholder="https://github.com/username/repository"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onAnalyze();
-            }
-          }}
-        />
+      <form className="search" onSubmit={submit}>
+        <label className="search-field">
+          <GitHubIcon size={18} />
 
-        <button onClick={onAnalyze} disabled={loading}>
-          {loading ? "Analyzing..." : "Analyze"}
+          <input
+            value={url}
+            onChange={(e) => onUrlChange(e.target.value)}
+            placeholder="https://github.com/username/repository"
+            aria-label="GitHub repository URL"
+            spellCheck="false"
+            autoComplete="off"
+          />
+        </label>
+
+        <button className="button-primary" type="submit" disabled={loading}>
+          {loading ? "Analyzing…" : "Analyze"}
         </button>
+      </form>
+
+      <div className="examples">
+        <span>Try:</span>
+
+        {EXAMPLE_REPOSITORIES.map((repository) => (
+          <button
+            className="chip"
+            type="button"
+            key={repository.url}
+            onClick={() => onSelectExample(repository.url)}
+          >
+            {repository.name}
+          </button>
+        ))}
       </div>
 
-      <div className="example-repositories">
-        <span className="example-title">Try one of my repositories</span>
-
-        <div className="example-list">
-          {EXAMPLE_REPOSITORIES.map((repository) => (
-            <button
-              className="repo-example"
-              key={repository.url}
-              onClick={() => onSelectExample(repository.url)}
-            >
-              {repository.name}
-            </button>
-          ))}
+      {error && (
+        <div className="error" role="alert">
+          {error}
         </div>
-      </div>
-
-      {error && <div className="error">{error}</div>}
+      )}
     </section>
   );
 }
