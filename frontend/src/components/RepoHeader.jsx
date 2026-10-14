@@ -1,9 +1,22 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { shareLink } from "../lib/repository.js";
 import { ExternalIcon, GitHubIcon, LinkIcon } from "./Icons.jsx";
 
 export default function RepoHeader({ repository }) {
   const [copied, setCopied] = useState(false);
+  const ref = useRef(null);
+
+  // Bring the finished analysis into view below the search form.
+  useEffect(() => {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    ref.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }, []);
 
   const copyLink = async () => {
     try {
@@ -16,7 +29,7 @@ export default function RepoHeader({ repository }) {
   };
 
   return (
-    <div className="repo-header">
+    <div className="repo-header" ref={ref}>
       <div className="repo-title">
         <span className="repo-avatar">
           <GitHubIcon size={20} />
