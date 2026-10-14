@@ -119,6 +119,7 @@ class RepositoryRequest(BaseModel):
 def analyze_files(path):
     files = []
     languages = {}
+    language_lines = {}
     dependencies = []
     entry_points = []
     important_files = []
@@ -176,11 +177,15 @@ def analyze_files(path):
 
             try:
                 if file.stat().st_size <= MAX_FILE_SIZE:
-                    lines += len(
+                    file_lines = len(
                         file.read_text(
                             encoding="utf-8",
                             errors="ignore",
                         ).splitlines()
+                    )
+                    lines += file_lines
+                    language_lines[language] = (
+                        language_lines.get(language, 0) + file_lines
                     )
             except OSError:
                 pass
@@ -188,6 +193,7 @@ def analyze_files(path):
     return {
         "files": files,
         "languages": languages,
+        "language_lines": language_lines,
         "dependencies": sorted(set(dependencies)),
         "entry_points": sorted(set(entry_points)),
         "important_files": sorted(set(important_files)),
@@ -319,7 +325,9 @@ most important information about the repository.
 Repository: {metadata["repository"]}
 Files: {metadata["files"]}
 Lines of code: {metadata["lines_of_code"]}
-Languages: {metadata["languages"]}
+Languages (file count): {metadata["languages"]}
+Languages (lines of code): {metadata["language_lines"]}
+Skipped vendored/generated files: {metadata["excluded_files"]}
 Dependency files: {metadata["dependencies"]}
 Directories: {metadata["directories"]}
 Entry points: {metadata["entry_points"]}
@@ -546,6 +554,7 @@ def analyze_repository(request: RepositoryRequest):
             "lines_of_code": data["lines_of_code"],
             "excluded_files": data["excluded_files"],
             "languages": data["languages"],
+            "language_lines": data["language_lines"],
             "dependencies": data["dependencies"],
             "dependency_contents": read_dependency_files(path),
             "directories": data["directories"],

@@ -135,6 +135,8 @@ function App() {
             <div className="grid">
               <TechStackCard
                 languages={result.languages}
+                languageLines={result.language_lines}
+                excludedFiles={result.excluded_files}
                 technologies={result.technologies}
               />
               <StructureCard directories={result.directories} />

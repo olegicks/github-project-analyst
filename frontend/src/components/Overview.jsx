@@ -40,11 +40,24 @@ export function Stats({ result }) {
   );
 }
 
-export function TechStackCard({ languages, technologies }) {
-  const breakdown = languageBreakdown(languages);
+export function TechStackCard({
+  languages,
+  languageLines,
+  technologies,
+  excludedFiles,
+}) {
+  const breakdown = languageBreakdown(languages, languageLines);
+  const meta = [
+    languageLines ? "Share by lines of code" : "Share by file count",
+    excludedFiles
+      ? `${excludedFiles.toLocaleString()} vendored or generated files skipped`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <Card title="Technology stack">
+    <Card title="Technology stack" meta={meta}>
       {breakdown.length > 0 && (
         <>
           <div className="language-bar" role="img" aria-label="Language breakdown">
@@ -69,6 +82,7 @@ export function TechStackCard({ languages, technologies }) {
                 />
                 <span className="language-name">{language.name}</span>
                 <span className="language-count">
+                  {language.lines !== null && `${language.lines.toLocaleString()} lines · `}
                   {language.count} {language.count === 1 ? "file" : "files"}
                 </span>
                 <strong>{language.percent.toFixed(1)}%</strong>

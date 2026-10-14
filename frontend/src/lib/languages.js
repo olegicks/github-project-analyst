@@ -29,14 +29,20 @@ const LANGUAGE_COLORS = {
 
 const FALLBACK_COLOR = "#8b93a7";
 
-export function languageBreakdown(languages) {
-  const entries = Object.entries(languages).sort((a, b) => b[1] - a[1]);
-  const total = entries.reduce((sum, [, count]) => sum + count, 0) || 1;
+// Shares are weighted by lines of code when the API provides them, falling
+// back to file counts for responses from older backends.
+export function languageBreakdown(languages, languageLines) {
+  const weights = languageLines || languages;
+  const total =
+    Object.values(weights).reduce((sum, value) => sum + value, 0) || 1;
 
-  return entries.map(([name, count]) => ({
-    name,
-    count,
-    percent: (count / total) * 100,
-    color: LANGUAGE_COLORS[name] || FALLBACK_COLOR,
-  }));
+  return Object.entries(languages)
+    .map(([name, count]) => ({
+      name,
+      count,
+      lines: languageLines?.[name] ?? null,
+      percent: ((weights[name] || 0) / total) * 100,
+      color: LANGUAGE_COLORS[name] || FALLBACK_COLOR,
+    }))
+    .sort((a, b) => b.percent - a.percent || b.count - a.count);
 }
