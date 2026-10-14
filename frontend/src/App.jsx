@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import AiAnalysisCard from "./components/AiAnalysis.jsx";
 import AnalysisProgress from "./components/AnalysisProgress.jsx";
 import DependencyGraphCard from "./components/DependencyGraph.jsx";
 import { Footer, Header, ThemeToggle } from "./components/Layout.jsx";
-import MarkdownContent from "./components/Markdown.jsx";
 import {
-  Card,
   SourceCodeCard,
   Stats,
   StructureCard,
@@ -149,9 +148,10 @@ function App() {
               limits={result.limits}
             />
 
-            <Card title="AI analysis" className="analysis">
-              <MarkdownContent content={result.ai_analysis} />
-            </Card>
+            <AiAnalysisCard
+              content={result.ai_analysis}
+              repository={repository}
+            />
           </div>
         )}
       </main>
