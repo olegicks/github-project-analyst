@@ -699,8 +699,11 @@ main {
   --xy-edge-stroke-selected: var(--accent);
   --xy-connectionline-stroke: var(--accent);
   --xy-minimap-background-color: var(--surface);
-  --xy-minimap-mask-background-color: color-mix(in srgb, var(--bg) 60%, transparent);
-  --xy-minimap-node-background-color: var(--surface-3);
+  --xy-minimap-mask-background-color: color-mix(in srgb, var(--bg) 45%, transparent);
+  --xy-minimap-mask-stroke-color: var(--accent);
+  --xy-minimap-mask-stroke-width: 2;
+  --xy-minimap-node-background-color: var(--text-subtle);
+  --xy-attribution-background-color: transparent;
   --xy-controls-button-background-color: var(--surface);
   --xy-controls-button-background-color-hover: var(--surface-2);
   --xy-controls-button-color: var(--text);
@@ -1038,4 +1041,8 @@ main {
   .graph {
     height: 460px;
   }
+}
+
+.graph .react-flow__attribution a {
+  color: var(--text-subtle);
 }

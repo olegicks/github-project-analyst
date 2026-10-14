@@ -89,7 +89,7 @@ function FileDetails({ file, imports, importedBy, onSelect, onClose }) {
         <Info label="Imports" value={file.imports} />
       </div>
 
-      <FileLinks title="Imports" files={imports} onSelect={onSelect} />
+      <FileLinks title="Local imports" files={imports} onSelect={onSelect} />
       <FileLinks title="Imported by" files={importedBy} onSelect={onSelect} />
     </aside>
   );

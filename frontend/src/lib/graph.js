@@ -4,6 +4,11 @@ const MAX_RENDERED_NODES = 120;
 const COLUMN_WIDTH = 270;
 const ROW_HEIGHT = 96;
 
+// Matches .file-node; React Flow needs sizes up front for the minimap
+// because this graph is not wired to onNodesChange measurements.
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 82;
+
 // Places each file one column to the right of the deepest file importing it,
 // so imports read left to right. Cycles are cut off after nodes.length passes.
 function assignLayers(ids, edges) {
@@ -64,6 +69,8 @@ export function buildGraph(dependencyGraph) {
       .map((node, row) => ({
         id: node.id,
         type: "file",
+        width: NODE_WIDTH,
+        height: NODE_HEIGHT,
         position: {
           x: column * COLUMN_WIDTH,
           y: offset + row * ROW_HEIGHT,
