@@ -8,7 +8,7 @@ import {
   ReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { buildGraph } from "../lib/graph.js";
+import { buildGraph, highlightGraph } from "../lib/graph.js";
 import { CloseIcon } from "./Icons.jsx";
 import { Info } from "./Metric.jsx";
 import { Card } from "./Overview.jsx";
@@ -20,7 +20,10 @@ function FileNode({ data }) {
 
       <strong title={data.file}>{data.label}</strong>
 
-      <span>{data.language}</span>
+      <span title={data.file}>
+        {data.directory ? `${data.directory}/ · ` : ""}
+        {data.language}
+      </span>
 
       <small>
         {data.functions} fn · {data.classes} cls · {data.imports} imports
@@ -35,7 +38,33 @@ const nodeTypes = {
   file: FileNode,
 };
 
-function FileDetails({ file, onClose }) {
+function FileLinks({ title, files, onSelect }) {
+  return (
+    <div className="details-links">
+      <h4>
+        {title} <span>{files.length}</span>
+      </h4>
+
+      {files.length ? (
+        files.map((file) => (
+          <button
+            key={file}
+            type="button"
+            className="details-link"
+            onClick={() => onSelect(file)}
+            title={file}
+          >
+            {file}
+          </button>
+        ))
+      ) : (
+        <p>None</p>
+      )}
+    </div>
+  );
+}
+
+function FileDetails({ file, imports, importedBy, onSelect, onClose }) {
   return (
     <aside className="file-details">
       <div className="details-header">
@@ -59,23 +88,33 @@ function FileDetails({ file, onClose }) {
         <Info label="Classes" value={file.classes} />
         <Info label="Imports" value={file.imports} />
       </div>
+
+      <FileLinks title="Imports" files={imports} onSelect={onSelect} />
+      <FileLinks title="Imported by" files={importedBy} onSelect={onSelect} />
     </aside>
   );
 }
 
 export default function DependencyGraphCard({ dependencyGraph, limits }) {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
   const graph = useMemo(
     () => buildGraph(dependencyGraph),
     [dependencyGraph]
   );
 
+  const view = useMemo(
+    () => highlightGraph(graph, selectedId),
+    [graph, selectedId]
+  );
+
+  const selected = graph.nodes.find((node) => node.id === selectedId);
+
   return (
     <Card
       title="Dependency graph"
       className="graph-card"
-      meta={`${dependencyGraph.edges.length} connections · ${dependencyGraph.connected_files.length} connected files`}
+      meta={`${dependencyGraph.edges.length} connections · ${dependencyGraph.connected_files.length} connected files · click a file to trace its imports`}
       actions={
         dependencyGraph.truncated && (
           <span className="badge">
@@ -88,24 +127,29 @@ export default function DependencyGraphCard({ dependencyGraph, limits }) {
         <div className="graph-layout">
           <div className="graph">
             <ReactFlow
-              nodes={graph.nodes}
-              edges={graph.edges}
+              nodes={view.nodes}
+              edges={view.edges}
               nodeTypes={nodeTypes}
-              onNodeClick={(_event, node) => setSelectedFile(node.data)}
+              onNodeClick={(_event, node) => setSelectedId(node.id)}
+              onPaneClick={() => setSelectedId(null)}
+              nodesConnectable={false}
               fitView
               minZoom={0.2}
               maxZoom={2}
             >
               <Background />
-              <Controls />
-              <MiniMap />
+              <Controls showInteractive={false} />
+              <MiniMap pannable zoomable style={{ width: 160, height: 110 }} />
             </ReactFlow>
           </div>
 
-          {selectedFile && (
+          {selected && (
             <FileDetails
-              file={selectedFile}
-              onClose={() => setSelectedFile(null)}
+              file={selected.data}
+              imports={graph.imports.get(selected.id) || []}
+              importedBy={graph.importedBy.get(selected.id) || []}
+              onSelect={setSelectedId}
+              onClose={() => setSelectedId(null)}
             />
           )}
         </div>
