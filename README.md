@@ -42,7 +42,8 @@ The goal is to make it easier to understand a project's structure, technologies,
 - Analyze public GitHub repositories from a URL
 - Detect programming languages and common technologies
 - Identify important files, configuration files, dependencies, tests, and entry points
-- Count source files and lines of code
+- Count source files and lines of code, with language shares weighted by lines
+- Skip vendored and generated files (`node_modules`, `vendor`, `staticfiles`, `dist`, minified bundles)
 - Extract Python functions, classes, imports, and API endpoints
 - Perform generic source analysis for multiple programming languages
 - Build an internal source-file dependency graph
