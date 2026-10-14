@@ -2,6 +2,8 @@ import ast
 import re
 from pathlib import Path
 
+from analyzer.filters import is_excluded
+
 
 SOURCE_EXTENSIONS = {
     ".py", ".js", ".jsx", ".ts", ".tsx",
@@ -412,12 +414,14 @@ def analyze_source_tree(root):
     for path in root.rglob("*"):
         if (
             not path.is_file()
-            or ".git" in path.parts
             or path.suffix.lower() not in SOURCE_EXTENSIONS
         ):
             continue
 
         relative = path.relative_to(root).as_posix()
+
+        if is_excluded(relative):
+            continue
         analysis = analyze_source_file(path)
 
         files.append({

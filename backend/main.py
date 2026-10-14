@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from git import Repo
 
 from analyzer.code_parser import analyze_source_tree
+from analyzer.filters import is_excluded
 
 load_dotenv()
 
@@ -125,16 +126,22 @@ def analyze_files(path):
     test_files = []
     directories = set()
     lines = 0
+    excluded = 0
 
     for file in path.rglob("*"):
-        if not file.is_file() or ".git" in file.parts:
+        if not file.is_file():
+            continue
+
+        relative = file.relative_to(path)
+        relative_str = relative.as_posix()
+
+        if is_excluded(relative_str):
+            if ".git" not in relative.parts:
+                excluded += 1
             continue
 
         if len(files) >= MAX_FILES:
             break
-
-        relative = file.relative_to(path)
-        relative_str = relative.as_posix()
 
         files.append(relative_str)
 
@@ -188,6 +195,7 @@ def analyze_files(path):
         "test_files": sorted(set(test_files)),
         "directories": sorted(directories),
         "lines_of_code": lines,
+        "excluded_files": excluded,
         "truncated": len(files) >= MAX_FILES,
     }
 
@@ -536,6 +544,7 @@ def analyze_repository(request: RepositoryRequest):
             "files": len(data["files"]),
             "file_list": data["files"],
             "lines_of_code": data["lines_of_code"],
+            "excluded_files": data["excluded_files"],
             "languages": data["languages"],
             "dependencies": data["dependencies"],
             "dependency_contents": read_dependency_files(path),
