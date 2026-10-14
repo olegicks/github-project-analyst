@@ -53,7 +53,7 @@ export default function RepoSearch({
           <input
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="https://github.com/username/repository"
+            placeholder="https://github.com/owner/repository"
             aria-label="GitHub repository URL"
             spellCheck="false"
             autoComplete="off"

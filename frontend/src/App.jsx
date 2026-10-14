@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DependencyGraphCard from "./components/DependencyGraph.jsx";
 import { Footer, Header, ThemeToggle } from "./components/Layout.jsx";
 import MarkdownContent from "./components/Markdown.jsx";
@@ -9,36 +9,66 @@ import {
   StructureCard,
   TechStackCard,
 } from "./components/Overview.jsx";
+import RepoHeader from "./components/RepoHeader.jsx";
 import RepoSearch from "./components/RepoSearch.jsx";
 import { analyzeRepository } from "./lib/api.js";
+import {
+  parseRepository,
+  readSharedRepository,
+  updateSharedRepository,
+} from "./lib/repository.js";
 import { useTheme } from "./lib/theme.js";
 import "./App.css";
 
 function App() {
-  const [url, setUrl] = useState("");
+  const [sharedRepository] = useState(readSharedRepository);
+  const [url, setUrl] = useState(sharedRepository?.url || "");
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [repository, setRepository] = useState(null);
+  const [loading, setLoading] = useState(Boolean(sharedRepository));
   const [error, setError] = useState("");
   const { theme, toggleTheme } = useTheme();
 
-  const analyze = async () => {
-    if (!url.startsWith("https://github.com/")) {
-      setError("Enter a valid GitHub repository URL.");
+  const runAnalysis = useCallback(
+    (parsed) =>
+      analyzeRepository(parsed.url)
+        .then((data) => {
+          setRepository(parsed);
+          setResult(data);
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false)),
+    []
+  );
+
+  const analyze = (input) => {
+    const parsed = parseRepository(input);
+
+    if (!parsed) {
+      setError(
+        "Enter a GitHub repository, e.g. https://github.com/owner/repository or owner/repository."
+      );
       return;
     }
 
+    setUrl(parsed.url);
     setLoading(true);
     setError("");
     setResult(null);
-
-    try {
-      setResult(await analyzeRepository(url));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    updateSharedRepository(parsed);
+    runAnalysis(parsed);
   };
+
+  // Analyze a repository opened from a shared ?repo= link. The ref keeps
+  // StrictMode's double effect run from starting a second paid analysis.
+  const sharedStarted = useRef(false);
+
+  useEffect(() => {
+    if (sharedRepository && !sharedStarted.current) {
+      sharedStarted.current = true;
+      runAnalysis(sharedRepository);
+    }
+  }, [sharedRepository, runAnalysis]);
 
   const selectExample = (repositoryUrl) => {
     setUrl(repositoryUrl);
@@ -55,7 +85,7 @@ function App() {
         <RepoSearch
           url={url}
           onUrlChange={setUrl}
-          onAnalyze={analyze}
+          onAnalyze={() => analyze(url)}
           onSelectExample={selectExample}
           loading={loading}
           error={error}
@@ -63,6 +93,8 @@ function App() {
 
         {result && (
           <div className="results">
+            <RepoHeader repository={repository} />
+
             <Stats result={result} />
 
             <div className="grid">

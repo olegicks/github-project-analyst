@@ -269,6 +269,52 @@ main {
   gap: 16px;
 }
 
+.repo-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.repo-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.repo-avatar {
+  display: grid;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.repo-owner {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.repo-title h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.repo-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
