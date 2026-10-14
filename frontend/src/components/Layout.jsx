@@ -1,6 +1,23 @@
-import { GitHubIcon } from "./Icons.jsx";
+import { GitHubIcon, MoonIcon, SunIcon } from "./Icons.jsx";
 
 const SOURCE_URL = "https://github.com/olegicks/github-project-analyst";
+
+export function ThemeToggle({ theme, onToggle }) {
+  const label =
+    theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+
+  return (
+    <button
+      className="icon-button"
+      type="button"
+      onClick={onToggle}
+      aria-label={label}
+      title={label}
+    >
+      {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+    </button>
+  );
+}
 
 export function Header({ children }) {
   return (

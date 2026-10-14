@@ -1,6 +1,6 @@
 import { useState } from "react";
 import DependencyGraphCard from "./components/DependencyGraph.jsx";
-import { Footer, Header } from "./components/Layout.jsx";
+import { Footer, Header, ThemeToggle } from "./components/Layout.jsx";
 import MarkdownContent from "./components/Markdown.jsx";
 import {
   Card,
@@ -11,6 +11,7 @@ import {
 } from "./components/Overview.jsx";
 import RepoSearch from "./components/RepoSearch.jsx";
 import { analyzeRepository } from "./lib/api.js";
+import { useTheme } from "./lib/theme.js";
 import "./App.css";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { theme, toggleTheme } = useTheme();
 
   const analyze = async () => {
     if (!url.startsWith("https://github.com/")) {
@@ -45,7 +47,9 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header>
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+      </Header>
 
       <main>
         <RepoSearch
