@@ -26,6 +26,7 @@ export default function RepoSearch({
   onSelectExample,
   loading,
   error,
+  onRetry,
 }) {
   const submit = (event) => {
     event.preventDefault();
@@ -82,7 +83,13 @@ export default function RepoSearch({
 
       {error && (
         <div className="error" role="alert">
-          {error}
+          <span>{error}</span>
+
+          {onRetry && (
+            <button className="button-secondary" type="button" onClick={onRetry}>
+              Try again
+            </button>
+          )}
         </div>
       )}
     </section>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import AnalysisProgress from "./components/AnalysisProgress.jsx";
 import DependencyGraphCard from "./components/DependencyGraph.jsx";
 import { Footer, Header, ThemeToggle } from "./components/Layout.jsx";
 import MarkdownContent from "./components/Markdown.jsx";
@@ -25,24 +26,49 @@ function App() {
   const [url, setUrl] = useState(sharedRepository?.url || "");
   const [result, setResult] = useState(null);
   const [repository, setRepository] = useState(null);
-  const [loading, setLoading] = useState(Boolean(sharedRepository));
+  const [pending, setPending] = useState(sharedRepository);
   const [error, setError] = useState("");
+  const [failed, setFailed] = useState(null);
   const { theme, toggleTheme } = useTheme();
+  const controller = useRef(null);
+  const loading = Boolean(pending);
 
-  const runAnalysis = useCallback(
-    (parsed) =>
-      analyzeRepository(parsed.url)
-        .then((data) => {
-          setRepository(parsed);
-          setResult(data);
-        })
-        .catch((err) => setError(err.message))
-        .finally(() => setLoading(false)),
-    []
-  );
+  const runAnalysis = useCallback((parsed) => {
+    controller.current?.abort();
+    const current = new AbortController();
+    controller.current = current;
+
+    return analyzeRepository(parsed.url, { signal: current.signal })
+      .then((data) => {
+        if (current.signal.aborted) {
+          return;
+        }
+
+        setRepository(parsed);
+        setResult(data);
+      })
+      .catch((err) => {
+        if (!current.signal.aborted) {
+          setError(err.message);
+          setFailed(parsed);
+        }
+      })
+      .finally(() => {
+        if (controller.current === current) {
+          setPending(null);
+        }
+      });
+  }, []);
+
+  const cancel = () => {
+    controller.current?.abort();
+    setPending(null);
+  };
 
   const analyze = (input) => {
     const parsed = parseRepository(input);
+
+    setFailed(null);
 
     if (!parsed) {
       setError(
@@ -52,7 +78,7 @@ function App() {
     }
 
     setUrl(parsed.url);
-    setLoading(true);
+    setPending(parsed);
     setError("");
     setResult(null);
     updateSharedRepository(parsed);
@@ -73,6 +99,7 @@ function App() {
   const selectExample = (repositoryUrl) => {
     setUrl(repositoryUrl);
     setError("");
+    setFailed(null);
   };
 
   return (
@@ -89,7 +116,16 @@ function App() {
           onSelectExample={selectExample}
           loading={loading}
           error={error}
+          onRetry={failed ? () => analyze(failed.url) : null}
         />
+
+        {pending && (
+          <AnalysisProgress
+            key={pending.slug}
+            repository={pending.slug}
+            onCancel={cancel}
+          />
+        )}
 
         {result && (
           <div className="results">
